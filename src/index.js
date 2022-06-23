@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 
-const { v4: uuidv4, v4 } = require('uuid');
+const { v4: uuidv4} = require('uuid');
 
 const app = express();
 
@@ -30,12 +30,12 @@ app.post('/users', (request, response) => {
 
   const userAlreadyExists = users.find(user => user.username === username);
 
-  if (!userAlreadyExists) {
+  if (userAlreadyExists) {
     return response.status(400).json({error: "User Already Exists!"});
   }
 
   const user = {
-    id: v4(),
+    id: uuidv4(),
     name,
     username,
     todos: []
@@ -63,7 +63,7 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 
   const todo = {
 
-    id: v4(), // precisa ser um uuid
+    id: uuidv4(), // precisa ser um uuid
     title,
     done: false,
     deadline: new Date(deadline),
@@ -86,7 +86,7 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   const todo = user.todos.find(todo => todo.id === id);
 
   if (!todo) {
-    return response.status(400).json({message: "ToDo not found!"});
+    return response.status(404).json({error: "ToDo not found!"});
   }
 
   todo.title = title;
@@ -104,7 +104,7 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   const todo = user.todos.find(todo => todo.id === id);
 
   if (!todo) {
-    return response.status(400).json({message: "ToDo not found!"});
+    return response.status(404).json({error: "ToDo not found!"});
   }
 
   todo.done = true;
@@ -117,15 +117,17 @@ app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
   const { user } = request;
   const { id } = request.params;
 
-  const indexToDo = user.todos.findIndex(todo => todo.id === id);
+  const indexToDo = user.todos.findIndex(todo => {
+    return todo.id === id;
+  });
 
-  if (indexToDo<=-1) {
-    return response.status(400).json({error: "ToDo not found!"});
+  if (indexToDo===-1) {
+    return response.status(404).json({error: "ToDo not found!"});
   }
 
   user.todos.splice(indexToDo,1);
 
-  return response.status(200).json(user.todos);    
+  return response.status(204).json();    
 });
 
 module.exports = app;
